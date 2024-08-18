@@ -1,19 +1,96 @@
-server:
-    port: 8081
-spring:
-    application:
-        name: OrderService
-    h2:
-        console:
-            enabled: true
-            path: /h2-console
-        datasource:
-            url: jdbc:h2:file:~/test
-            username: sa
-            password: password
-            driverClassName: org.h2.Driver
-        jpa:
-            database-platform: org.hibernate.dialect.H2Dialect
-            hibernate:
-                ddl-auto: update
+orders:
+  commands:
+    topic:
+      name: orders-commands
+  events:
+    topic:
+      name: orders-events
+payments:
+  commands:
+    topic:
+      name: payments-commands
+  events:
+    topic:
+      name: payments-events
+products:
+  commands:
+    topic:
+      name: products-commands
+  events:
+    topic:
+      name: products-events
 
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb  # In-memory H2 database
+    driver-class-name: org.h2.Driver
+    username: sa  # Default username for H2
+    password:  # Default password (blank by default)
+    initialization-mode: always  # Initialize the database on startup
+    # Additional properties can be added here
+    hikari:
+      maximum-pool-size: 10  # Optional: Set the maximum pool size for HikariCP
+
+  h2:
+    console:
+      enabled: true  # Enable the H2 web console
+      path: /h2-console  # URL path to access the H2 console
+      # Optionally configure the allowed origins
+      # allowed-origins: http://localhost:3000
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Automatically update the database schema (create, update, validate, none)
+    show-sql: true  # Log SQL statements to the console
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect  # Hibernate dialect for H2
+        format_sql: true  # Format SQL statements for readability
+
+  # Optional: Configure the server port
+  server:
+    port: 8080  # The port on which the Spring Boot application runs
+
+  # Optional: Configure logging level
+  logging:
+    level:
+      root: INFO  # Default logging level
+      org.springframework: DEBUG  # Enable debug logging for Spring Framework
+      org.hibernate: WARN  # Set Hibernate logging level
+
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  kafka:
+    #    bootstrap-servers: localhost:9091,localhost:9092,localhost:9093
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: orders-ms
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: com.united.core.*
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        delivery:
+          timeout:
+            ms: 120000
+        enable:
+          idempotence: true
+        linger:
+          ms: 0
+        max:
+          in:
+            flight:
+              requests:
+                per:
+                  connection: 5
+        request:
+          timeout:
+            ms: 30000
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

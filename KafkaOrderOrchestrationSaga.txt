@@ -38,3 +38,10 @@ Dependencies
 5.Kafka
 6.H2
 
+1.Saga has KafkaListener at class level and KafkaHandler at method level that handles events.
+Additionally to handling events, Saga can publish commands.
+2. Service has KafkaListener at class level and KafkaHandler at method level that handles the command.
+3. All events, commands, & dtos "Records" are in common core project.
+
+To simplify -> Service handles Commands and Saga handles Events
+
